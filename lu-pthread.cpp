@@ -4,6 +4,13 @@
 #include <cstdlib>
 #include <cstdio>
 #include <pthread.h>
+#include <time.h>
+#include <chrono>
+#include <functional>
+#include <map>
+
+
+using namespace std;
 
 void print_matrix(const std::vector<std::vector<double>>& mat, const char* name) {
     printf("%s:\n", name);
@@ -20,6 +27,54 @@ void lu_decomposition_seq(std::vector<std::vector<double>>& A,
                           std::vector<std::vector<double>>& U,
                           int n) {
     printf("Running sequential version...\n");
+    auto t0 = std::chrono::steady_clock::now();
+
+    vector<vector<double>> A_copy(A);
+
+    for (int k = 0; k < n; k++) {
+        // Pivoting
+        double max = 0.0;
+        int k_prime = k;
+        
+        // Find the maximum element in the k-th column
+        for (int i = k; i < n; i++) {
+            double abs_A_ik = abs(A_copy[i][k]);
+            if (abs_A_ik > max) {
+                max = abs_A_ik;
+                k_prime = i;
+            }
+        }
+    
+        if (max == 0.0) {
+            cerr << "Error: Singular matrix" << endl;
+            exit(-1);
+        }
+    
+        
+        // Swap rows in P, A, and L
+        if(k!=k_prime) {
+            swap(A_copy[k], A_copy[k_prime]);
+        }
+    
+        double pivot = A_copy[k][k];
+        const vector<double>& A_k = A_copy[k];
+    
+        for (int i = k + 1; i < n; i++) {
+            A_copy[i][k] = A_copy[i][k] / pivot;
+            double L_ik = A_copy[i][k];
+      
+            auto& A_i = A_copy[i];
+      
+            for (int j = k+1; j < n; j++) {
+                A_i[j] -= L_ik * A_k[j];
+            }
+        }
+    }
+
+    auto t1 = chrono::steady_clock::now();
+    chrono::duration<double> elapsed = t1 - t0;
+    cout << "Elapsed time: " 
+         << elapsed.count() << " seconds\n";
 }
 
 // Parallel LU decomposition using pthreads (stub)
