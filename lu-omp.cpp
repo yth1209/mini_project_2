@@ -12,7 +12,7 @@
 
 using namespace std;
 
-vector<int> init_P(int n);
+vector<int> init_P(int n, int t);
 vector<std::vector<double>> copy_matrix(vector<vector<double>>& A, int n);
 
 void decomposed_A_to_L_U(std::vector<std::vector<double>>& A, vector<std::vector<double>>&L, vector<std::vector<double>>&U, int n);
@@ -36,8 +36,7 @@ void lu_decomposition_omp(std::vector<std::vector<double>>& A,
     
     auto t0 = std::chrono::steady_clock::now();
 
-    omp_set_num_threads(t);
-    vector<int> P = init_P(n);
+    vector<int> P = init_P(n, t);
     vector<vector<double>> A_copy(A);
 
     for (int k = 0; k < n; k++) {
@@ -46,7 +45,7 @@ void lu_decomposition_omp(std::vector<std::vector<double>>& A,
         int k_prime = k;
         
         // Find the maximum element in the k-th column
-        #pragma omp parallel default(none) shared(max, k_prime, A_copy) firstprivate(k, n)
+        #pragma omp parallel default(none) shared(max, k_prime, A_copy) firstprivate(k, n) num_threads(t)
         { 
             // Initialize local variables for each thread
             double local_max = 0.0;
@@ -87,7 +86,7 @@ void lu_decomposition_omp(std::vector<std::vector<double>>& A,
         const vector<double>& A_k = A_copy[k];
     
     
-        #pragma omp parallel for default(none) shared(pivot, A_copy, A_k, k) firstprivate(n) schedule(dynamic)
+        #pragma omp parallel for default(none) shared(pivot, A_copy, A_k, k) firstprivate(n) schedule(dynamic) num_threads(t)
         for (int i = k + 1; i < n; i++) {
             A_copy[i][k] = A_copy[i][k] / pivot;
             double L_ik = A_copy[i][k];
@@ -140,10 +139,10 @@ int main(int argc, char* argv[]) {
 }
 
   
-vector<int> init_P(int n){
+vector<int> init_P(int n, int t){
   vector<int> P(n);
 
-  #pragma omp parallel default(none) shared(P) firstprivate(n)
+  #pragma omp parallel default(none) shared(P) firstprivate(n) num_threads(t)
   {
     #pragma omp for
     for (int i = 0; i < n; i++){
@@ -166,7 +165,6 @@ vector<std::vector<double>> copy_matrix(vector<std::vector<double>>& A, int n){
 }
 
 void decomposed_A_to_L_U(std::vector<std::vector<double>>& A, std::vector<std::vector<double>>&L, std::vector<std::vector<double>>&U, int n) {
-    // #pragma omp parallel for default(none) shared(A, L, U) firstprivate(matrix_size)
     for (int i = 0; i < n; i++) {
   
         for (int j = 0; j < n; j++) {
