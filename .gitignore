@@ -1,0 +1,6 @@
+lu-omp-parallel
+lu-omp-serial
+lu-pthread-parallel
+lu-pthread-serial
+
+.vscode/
