@@ -191,7 +191,7 @@ void lu_decomposition_parallel(std::vector<std::vector<double>>& A,
         const vector<double>& A_k = A_copy[k];
     
         //define total number of tasks
-        int task_num = t * 1;
+        int task_num = t * 2;
 
         //calculate strid with ceiling
         int stride = max(1, (n-k-1 + task_num - 1)/task_num);
