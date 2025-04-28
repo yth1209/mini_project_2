@@ -129,7 +129,9 @@ void* decomp_worker(void* arg){
         remaining_tasks--;
         delete args;
 
+        pthread_mutex_lock(&decomp_lock);
         pthread_cond_signal(&main_thread_cond);
+        pthread_mutex_unlock(&decomp_lock);
     }
 
     return nullptr;
@@ -191,7 +193,7 @@ void lu_decomposition_parallel(std::vector<std::vector<double>>& A,
         const vector<double>& A_k = A_copy[k];
     
         //define total number of tasks
-        int task_num = t * 2;
+        int task_num = t * 1;
 
         //calculate strid with ceiling
         int stride = max(1, (n-k-1 + task_num - 1)/task_num);
